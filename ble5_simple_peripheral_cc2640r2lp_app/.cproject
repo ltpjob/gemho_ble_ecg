@@ -78,8 +78,9 @@
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.C_DIALECT.275878415" name="C Dialect" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.C_DIALECT" useByScannerDiscovery="false" value="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.C_DIALECT.C99" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.GCC.1118471273" name="Enable support for GCC extensions (DEPRECATED) (--gcc)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.GCC" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.GEN_FUNC_SUBSECTIONS.1701284502" name="Place each function in a separate subsection (--gen_func_subsections, -ms)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.GEN_FUNC_SUBSECTIONS" useByScannerDiscovery="false" value="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.GEN_FUNC_SUBSECTIONS.on" valueType="enumerated"/>
-								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.DEFINE.1016992456" name="Pre-define NAME (--define, -D)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.DEFINE" valueType="definedSymbols">
+								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.DEFINE.1016992456" name="Pre-define NAME (--define, -D)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.DEFINE" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="${INHERITED_SYMBOLS}"/>
+									<listOptionValue builtIn="false" value="Display_DISABLE_ALL"/>
 									<listOptionValue builtIn="false" value="${COM_TI_SIMPLELINK_CC2640R2_SDK_SYMBOLS}"/>
 									<listOptionValue builtIn="false" value="DeviceFamily_CC26X0R2"/>
 									<listOptionValue builtIn="false" value="BOARD_DISPLAY_USE_LCD=0"/>
@@ -172,7 +173,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="TOOLS/ccs_linker_defines.cmd|TOOLS/cc26xx_app.cmd|TOOLS/ccs_compiler_defines.bcfg|Startup/ccfg_app_ble_rcosc.c|Application/rcosc_calibration.h|Application/rcosc_calibration.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="TOOLS/src|TOOLS/ccs_linker_defines.cmd|TOOLS/cc26xx_app.cmd|TOOLS/ccs_compiler_defines.bcfg|Startup/ccfg_app_ble_rcosc.c|Application/rcosc_calibration.h|Application/rcosc_calibration.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -353,7 +354,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="TOOLS/ccs_linker_defines.cmd|TOOLS/cc26xx_app.cmd|TOOLS/ccs_compiler_defines.bcfg|Startup/ccfg_app_ble.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="TOOLS/src|TOOLS/ccs_linker_defines.cmd|TOOLS/cc26xx_app.cmd|TOOLS/ccs_compiler_defines.bcfg|Startup/ccfg_app_ble.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -376,4 +377,6 @@
 			<content-type-mapping configuration="" content-type="org.eclipse.cdt.core.cxxSource" language="com.ti.ccstudio.core.TIGPPLanguage"/>
 		</project-mappings>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="refreshScope"/>
 </cproject>

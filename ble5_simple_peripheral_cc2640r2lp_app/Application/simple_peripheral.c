@@ -67,6 +67,7 @@
 
 #include "devinfoservice.h"
 #include "simple_gatt_profile.h"
+#include "GemhoProfile.h"
 
 #if defined(FEATURE_OAD) || defined(IMAGE_INVALIDATE)
 #include "oad_target.h"
@@ -576,6 +577,7 @@ static void SimpleBLEPeripheral_init(void)
 
 #ifndef FEATURE_OAD_ONCHIP
   SimpleProfile_AddService(GATT_ALL_SERVICES); // Simple GATT Profile
+  GemhoProfile_AddService();
 #endif //!FEATURE_OAD_ONCHIP
 
 #ifdef FEATURE_OAD
