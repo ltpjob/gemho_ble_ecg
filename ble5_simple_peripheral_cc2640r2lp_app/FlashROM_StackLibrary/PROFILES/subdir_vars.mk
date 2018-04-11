@@ -7,6 +7,7 @@ SHELL = cmd.exe
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../PROFILES/GemhoProfile.c \
+../PROFILES/ThinkGearStreamParser.c \
 ../PROFILES/devinfoservice.c \
 ../PROFILES/gatt_uuid.c \
 ../PROFILES/gattservapp_util.c \
@@ -15,6 +16,7 @@ C_SRCS += \
 
 C_DEPS += \
 ./PROFILES/GemhoProfile.d \
+./PROFILES/ThinkGearStreamParser.d \
 ./PROFILES/devinfoservice.d \
 ./PROFILES/gatt_uuid.d \
 ./PROFILES/gattservapp_util.d \
@@ -23,6 +25,7 @@ C_DEPS += \
 
 OBJS += \
 ./PROFILES/GemhoProfile.obj \
+./PROFILES/ThinkGearStreamParser.obj \
 ./PROFILES/devinfoservice.obj \
 ./PROFILES/gatt_uuid.obj \
 ./PROFILES/gattservapp_util.obj \
@@ -31,6 +34,7 @@ OBJS += \
 
 OBJS__QUOTED += \
 "PROFILES\GemhoProfile.obj" \
+"PROFILES\ThinkGearStreamParser.obj" \
 "PROFILES\devinfoservice.obj" \
 "PROFILES\gatt_uuid.obj" \
 "PROFILES\gattservapp_util.obj" \
@@ -39,6 +43,7 @@ OBJS__QUOTED += \
 
 C_DEPS__QUOTED += \
 "PROFILES\GemhoProfile.d" \
+"PROFILES\ThinkGearStreamParser.d" \
 "PROFILES\devinfoservice.d" \
 "PROFILES\gatt_uuid.d" \
 "PROFILES\gattservapp_util.d" \
@@ -47,6 +52,7 @@ C_DEPS__QUOTED += \
 
 C_SRCS__QUOTED += \
 "../PROFILES/GemhoProfile.c" \
+"../PROFILES/ThinkGearStreamParser.c" \
 "../PROFILES/devinfoservice.c" \
 "../PROFILES/gatt_uuid.c" \
 "../PROFILES/gattservapp_util.c" \

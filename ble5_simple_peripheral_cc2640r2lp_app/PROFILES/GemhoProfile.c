@@ -54,22 +54,13 @@
 #include "gapbondmgr.h"
 
 #include "GemhoProfile.h"
+#include <ti/drivers/UART.h>
+#include "Board.h"
+#include "ThinkGearStreamParser.h"
+#include <stdio.h>
 
-/*********************************************************************
- * MACROS
- */
-
-/*********************************************************************
- * CONSTANTS
- */
-
-/*********************************************************************
- * TYPEDEFS
- */
-
-/*********************************************************************
-* GLOBAL VARIABLES
-*/
+#define GEMNOTIFY_TASK_STACK_SIZE                   2048
+#define DELAY_MS(i)      (Task_sleep(((i) * 1000) / Clock_tickPeriod))
 
 // GemhoProfile Service UUID
 CONST uint8_t GemhoProfileUUID[ATT_BT_UUID_SIZE] =
@@ -86,6 +77,9 @@ CONST uint8_t GemhoProfile_Gemho_serviceUUID[ATT_BT_UUID_SIZE] =
 /*********************************************************************
  * LOCAL VARIABLES
  */
+
+static Task_Struct notifyTask;
+static Char notifyTaskStack[GEMNOTIFY_TASK_STACK_SIZE];
 
 static GemhoProfileCBs_t *pAppCBs = NULL;
 
@@ -218,38 +212,103 @@ bStatus_t GemhoProfile_Notification(gattCharCfg_t *charCfgTbl, uint8 *pValue,
     return (status);
 }
 
-#define GEMNOTIFY_TASK_STACK_SIZE                   644
-#define DELAY_MS(i)      (Task_sleep(((i) * 1000) / Clock_tickPeriod))
-
-Task_Struct notifyTask;
-Char notifyTaskStack[GEMNOTIFY_TASK_STACK_SIZE];
-
-
-static void SimpleNotify_taskFxn(UArg a0, UArg a1)
+void handleDataValueFunc(unsigned char extendedCodeLevel,
+                                unsigned char code, unsigned char numBytes,
+                                const unsigned char *value, void *customData)
 {
-    while(1)
+    static uint8 poorSignal = 0;
+    static uint8 heartRate = 0;
+//    static int16 rawWave = 0;
+    static uint8 count = 0;
+
+    if (extendedCodeLevel == 0)
     {
-        DELAY_MS(1000);
-        uint8 testChar[] = "gemho_ecg";
+        if(code == 0x80)
+        {
+            static uint8 buffer[20] = "";
 
-        GemhoProfile_Notification( GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
-                                    GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
-                                    testChar, sizeof(testChar));
+//            rawWave = (value[0]<<8) | value[1];
+            buffer[count*2] = value[0];
+            buffer[count*2+1] = value[1];
 
-//        System_printf("Device Task Init\n");
+            if(count >= 9)
+            {
+                buffer[count*2] = poorSignal;
+                buffer[count*2+1] = heartRate;
+                count = 0;
+                GemhoProfile_Notification( GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+                                            GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+                                            (uint8 *)buffer, sizeof(buffer));
+            }
+            else
+            {
+                count++;
+            }
+
+
+//            snprintf(buffer, sizeof(buffer), "%u,%d,%u", poorSignal, rawWave, heartRate);
+//            GemhoProfile_Notification( GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+//                                        GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+//                                        (uint8 *)buffer, strlen(buffer));
+
+
+        }
+        else if(code == 0x02)
+        {
+            poorSignal = value[0];
+        }
+        else if(code == 0x03)
+        {
+            heartRate = value[0];
+        }
     }
 
 }
 
-/*********************************************************************
-* PUBLIC FUNCTIONS
-*/
+static void SimpleNotify_taskFxn(UArg a0, UArg a1)
+{
+    char input[128];
+    UART_Handle uart;
+    UART_Params uartParams;
+    ThinkGearStreamParser parser;
 
-/*
- * GemhoProfile_AddService- Initializes the GemhoProfile service by registering
- *          GATT attributes with the GATT server.
- *
- */
+    UART_init();
+
+    UART_Params_init(&uartParams);
+    uartParams.writeDataMode = UART_DATA_BINARY;
+    uartParams.readDataMode = UART_DATA_BINARY;
+    uartParams.readReturnMode = UART_RETURN_FULL;
+    uartParams.readEcho = UART_ECHO_OFF;
+    uartParams.baudRate = 57600;
+
+    uart = UART_open(Board_UART0, &uartParams);
+
+    if(uart == NULL)
+    {
+        while (1);
+    }
+
+    THINKGEAR_initParser (&parser, PARSER_TYPE_PACKETS, handleDataValueFunc, NULL);
+
+    while(1)
+    {
+        if(linkDB_NumActive() > 0)
+        {
+            int len = UART_read(uart, input, sizeof(input));
+            for(int i=0; i<len; i++)
+            {
+                THINKGEAR_parseByte (&parser, input[i]);
+            }
+        }
+        else
+        {
+            DELAY_MS(100);
+        }
+    }
+
+}
+
+
 bStatus_t GemhoProfile_AddService( void )
 {
   uint8_t status;
@@ -270,14 +329,12 @@ bStatus_t GemhoProfile_AddService( void )
                                         &GemhoProfileCBs );
 
   Task_Params taskParams;
-
-  // Configure task
   Task_Params_init(&taskParams);
   taskParams.stack = notifyTaskStack;
   taskParams.stackSize = GEMNOTIFY_TASK_STACK_SIZE;
-  taskParams.priority = 5;
-
+  taskParams.priority = 1;
   Task_construct(&notifyTask, SimpleNotify_taskFxn, &taskParams, NULL);
+
 
   return ( status );
 }
@@ -457,11 +514,11 @@ static bStatus_t GemhoProfile_WriteAttrCB( uint16 connHandle, gattAttribute_t *p
       if ( offset + len == GEMHOPROFILE_GEMHO_SERVICE_LEN)
         paramID = GEMHOPROFILE_GEMHO_SERVICE;
 
-      uint8 testChar[] = "123456789";
-
-      GemhoProfile_Notification( GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
-                                  GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
-                                  testChar, sizeof(testChar));
+//      uint8 testChar[] = "123456789";
+//
+//      GemhoProfile_Notification( GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
+//                                  GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
+//                                  testChar, sizeof(testChar));
 
     }
   }

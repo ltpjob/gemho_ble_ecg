@@ -378,5 +378,12 @@
 		</project-mappings>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="FlashROM_StackLibrary_RCOSC">
+			<resource resourceType="PROJECT" workspacePath="/ble5_simple_peripheral_cc2640r2lp_app"/>
+		</configuration>
+		<configuration configurationName="FlashROM_StackLibrary">
+			<resource resourceType="PROJECT" workspacePath="/ble5_simple_peripheral_cc2640r2lp_app"/>
+		</configuration>
+	</storageModule>
 </cproject>

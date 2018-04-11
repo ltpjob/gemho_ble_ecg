@@ -66,7 +66,7 @@
 #include "icall_ble_api.h"
 
 #include "devinfoservice.h"
-#include "simple_gatt_profile.h"
+//#include "simple_gatt_profile.h"
 #include "GemhoProfile.h"
 
 #if defined(FEATURE_OAD) || defined(IMAGE_INVALIDATE)
@@ -107,11 +107,11 @@
 #ifndef FEATURE_OAD
 // Minimum connection interval (units of 1.25ms, 80=100ms) for automatic
 // parameter update request
-#define DEFAULT_DESIRED_MIN_CONN_INTERVAL     80
+#define DEFAULT_DESIRED_MIN_CONN_INTERVAL     16
 
 // Maximum connection interval (units of 1.25ms, 800=1000ms) for automatic
 // parameter update request
-#define DEFAULT_DESIRED_MAX_CONN_INTERVAL     800
+#define DEFAULT_DESIRED_MAX_CONN_INTERVAL     32
 
 #else // FEATURE_OAD
 // Increase the the connection interval to allow for higher throughput for OAD
@@ -130,14 +130,14 @@
 
 // Supervision timeout value (units of 10ms, 1000=10s) for automatic parameter
 // update request
-#define DEFAULT_DESIRED_CONN_TIMEOUT          1000
+#define DEFAULT_DESIRED_CONN_TIMEOUT          100
 
 // After the connection is formed, the peripheral waits until the central
 // device asks for its preferred connection parameters
 #define DEFAULT_ENABLE_UPDATE_REQUEST         GAPROLE_LINK_PARAM_UPDATE_WAIT_REMOTE_PARAMS
 
 // Connection Pause Peripheral time value (in seconds)
-#define DEFAULT_CONN_PAUSE_PERIPHERAL         6
+#define DEFAULT_CONN_PAUSE_PERIPHERAL         2
 
 // How often to perform periodic event (in msec)
 #define SBP_PERIODIC_EVT_PERIOD               5000
@@ -232,7 +232,7 @@ static ICall_EntityID selfEntity;
 static ICall_SyncHandle syncEvent;
 
 // Clock instances for internal periodic events.
-static Clock_Struct periodicClock;
+//static Clock_Struct periodicClock;
 
 // Queue object used for app messages
 static Queue_Struct appMsg;
@@ -312,8 +312,8 @@ static uint8_t advertData[] =
   HI_UINT16(OAD_SERVICE_UUID),
 #endif //FEATURE_OAD
 #ifndef FEATURE_OAD_ONCHIP
-  LO_UINT16(SIMPLEPROFILE_SERV_UUID),
-  HI_UINT16(SIMPLEPROFILE_SERV_UUID)
+  LO_UINT16(GEMHOPROFILE_GEMHO_SERVICE_UUID),
+  HI_UINT16(GEMHOPROFILE_GEMHO_SERVICE_UUID)
 #endif //FEATURE_OAD_ONCHIP
 };
 
@@ -335,16 +335,16 @@ static uint8_t SimpleBLEPeripheral_processStackMsg(ICall_Hdr *pMsg);
 static uint8_t SimpleBLEPeripheral_processGATTMsg(gattMsgEvent_t *pMsg);
 static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg);
 static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState);
-static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID);
-static void SimpleBLEPeripheral_performPeriodicTask(void);
-static void SimpleBLEPeripheral_clockHandler(UArg arg);
+//static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID);
+//static void SimpleBLEPeripheral_performPeriodicTask(void);
+//static void SimpleBLEPeripheral_clockHandler(UArg arg);
 
 static void SimpleBLEPeripheral_sendAttRsp(void);
 static void SimpleBLEPeripheral_freeAttRsp(uint8_t status);
 
 static void SimpleBLEPeripheral_stateChangeCB(gaprole_States_t newState);
 #ifndef FEATURE_OAD_ONCHIP
-static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID);
+//static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID);
 #endif //!FEATURE_OAD_ONCHIP
 static void SimpleBLEPeripheral_enqueueMsg(uint8_t event, uint8_t state);
 
@@ -384,10 +384,10 @@ static gapBondCBs_t simpleBLEPeripheral_BondMgrCBs =
 
 // Simple GATT Profile Callbacks
 #ifndef FEATURE_OAD_ONCHIP
-static simpleProfileCBs_t SimpleBLEPeripheral_simpleProfileCBs =
-{
-  SimpleBLEPeripheral_charValueChangeCB // Simple GATT Characteristic value change callback
-};
+//static simpleProfileCBs_t SimpleBLEPeripheral_simpleProfileCBs =
+//{
+//  SimpleBLEPeripheral_charValueChangeCB // Simple GATT Characteristic value change callback
+//};
 #endif //!FEATURE_OAD_ONCHIP
 
 #ifdef FEATURE_OAD
@@ -470,8 +470,8 @@ static void SimpleBLEPeripheral_init(void)
   appMsgQueue = Util_constructQueue(&appMsg);
 
   // Create one-shot clocks for internal periodic events.
-  Util_constructClock(&periodicClock, SimpleBLEPeripheral_clockHandler,
-                      SBP_PERIODIC_EVT_PERIOD, 0, false, SBP_PERIODIC_EVT);
+//  Util_constructClock(&periodicClock, SimpleBLEPeripheral_clockHandler,
+//                      SBP_PERIODIC_EVT_PERIOD, 0, false, SBP_PERIODIC_EVT);
 
   dispHandle = Display_open(SBP_DISPLAY_TYPE, NULL);
 
@@ -576,7 +576,7 @@ static void SimpleBLEPeripheral_init(void)
   DevInfo_AddService();                        // Device Information Service
 
 #ifndef FEATURE_OAD_ONCHIP
-  SimpleProfile_AddService(GATT_ALL_SERVICES); // Simple GATT Profile
+//  SimpleProfile_AddService(GATT_ALL_SERVICES); // Simple GATT Profile
   GemhoProfile_AddService();
 #endif //!FEATURE_OAD_ONCHIP
 
@@ -596,27 +596,27 @@ static void SimpleBLEPeripheral_init(void)
   // For more information, see the sections in the User's Guide:
   // http://software-dl.ti.com/lprf/ble5stack-docs-latest/html/ble-stack/gatt.html#
   // http://software-dl.ti.com/lprf/ble5stack-docs-latest/html/ble-stack/gatt.html#gattservapp-module
-  {
-    uint8_t charValue1 = 1;
-    uint8_t charValue2 = 2;
-    uint8_t charValue3 = 3;
-    uint8_t charValue4 = 4;
-    uint8_t charValue5[SIMPLEPROFILE_CHAR5_LEN] = { 1, 2, 3, 4, 5 };
-
-    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t),
-                               &charValue1);
-    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR2, sizeof(uint8_t),
-                               &charValue2);
-    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR3, sizeof(uint8_t),
-                               &charValue3);
-    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
-                               &charValue4);
-    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR5, SIMPLEPROFILE_CHAR5_LEN,
-                               charValue5);
-  }
+//  {
+//    uint8_t charValue1 = 1;
+//    uint8_t charValue2 = 2;
+//    uint8_t charValue3 = 3;
+//    uint8_t charValue4 = 4;
+//    uint8_t charValue5[SIMPLEPROFILE_CHAR5_LEN] = { 1, 2, 3, 4, 5 };
+//
+//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t),
+//                               &charValue1);
+//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR2, sizeof(uint8_t),
+//                               &charValue2);
+//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR3, sizeof(uint8_t),
+//                               &charValue3);
+//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
+//                               &charValue4);
+//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR5, SIMPLEPROFILE_CHAR5_LEN,
+//                               charValue5);
+//  }
 
   // Register callback with SimpleGATTprofile
-  SimpleProfile_RegisterAppCBs(&SimpleBLEPeripheral_simpleProfileCBs);
+//  SimpleProfile_RegisterAppCBs(&SimpleBLEPeripheral_simpleProfileCBs);
 #endif //!FEATURE_OAD_ONCHIP
 
   // Start Bond Manager and register callback
@@ -778,10 +778,10 @@ static void SimpleBLEPeripheral_taskFxn(UArg a0, UArg a1)
 
       if (events & SBP_PERIODIC_EVT)
       {
-        Util_startClock(&periodicClock);
+//        Util_startClock(&periodicClock);
 
         // Perform periodic application task
-        SimpleBLEPeripheral_performPeriodicTask();
+//        SimpleBLEPeripheral_performPeriodicTask();
       }
 
 #ifdef FEATURE_OAD
@@ -1085,7 +1085,7 @@ static void SimpleBLEPeripheral_processAppMsg(sbpEvt_t *pMsg)
       break;
 
     case SBP_CHAR_CHANGE_EVT:
-      SimpleBLEPeripheral_processCharValueChangeEvt(pMsg->hdr.state);
+//      SimpleBLEPeripheral_processCharValueChangeEvt(pMsg->hdr.state);
       break;
 
 #if !defined(Display_DISABLE_ALL)
@@ -1196,7 +1196,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
         linkDBInfo_t linkInfo;
         uint8_t numActive = 0;
 
-        Util_startClock(&periodicClock);
+//        Util_startClock(&periodicClock);
 
         numActive = linkDB_NumActive();
 
@@ -1250,7 +1250,7 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
       break;
 
     case GAPROLE_WAITING:
-      Util_stopClock(&periodicClock);
+//      Util_stopClock(&periodicClock);
       SimpleBLEPeripheral_freeAttRsp(bleNotConnected);
 
       Display_print0(dispHandle, SBP_ROW_ROLESTATE, 0, "Disconnected");
@@ -1304,10 +1304,10 @@ static void SimpleBLEPeripheral_processStateChangeEvt(gaprole_States_t newState)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID)
-{
-  SimpleBLEPeripheral_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID);
-}
+//static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID)
+//{
+//  SimpleBLEPeripheral_enqueueMsg(SBP_CHAR_CHANGE_EVT, paramID);
+//}
 #endif //!FEATURE_OAD_ONCHIP
 
 /*********************************************************************
@@ -1320,31 +1320,31 @@ static void SimpleBLEPeripheral_charValueChangeCB(uint8_t paramID)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID)
-{
-#ifndef FEATURE_OAD_ONCHIP
-  uint8_t newValue;
-
-  switch(paramID)
-  {
-    case SIMPLEPROFILE_CHAR1:
-      SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR1, &newValue);
-
-      Display_print1(dispHandle, SBP_ROW_STATUS_1, 0, "Char 1: %d", (uint16_t)newValue);
-      break;
-
-    case SIMPLEPROFILE_CHAR3:
-      SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &newValue);
-
-      Display_print1(dispHandle, SBP_ROW_STATUS_1, 0, "Char 3: %d", (uint16_t)newValue);
-      break;
-
-    default:
-      // should not reach here!
-      break;
-  }
-#endif //!FEATURE_OAD_ONCHIP
-}
+//static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID)
+//{
+//#ifndef FEATURE_OAD_ONCHIP
+//  uint8_t newValue;
+//
+//  switch(paramID)
+//  {
+//    case SIMPLEPROFILE_CHAR1:
+//      SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR1, &newValue);
+//
+//      Display_print1(dispHandle, SBP_ROW_STATUS_1, 0, "Char 1: %d", (uint16_t)newValue);
+//      break;
+//
+//    case SIMPLEPROFILE_CHAR3:
+//      SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &newValue);
+//
+//      Display_print1(dispHandle, SBP_ROW_STATUS_1, 0, "Char 3: %d", (uint16_t)newValue);
+//      break;
+//
+//    default:
+//      // should not reach here!
+//      break;
+//  }
+//#endif //!FEATURE_OAD_ONCHIP
+//}
 
 /*********************************************************************
  * @fn      SimpleBLEPeripheral_performPeriodicTask
@@ -1359,23 +1359,23 @@ static void SimpleBLEPeripheral_processCharValueChangeEvt(uint8_t paramID)
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_performPeriodicTask(void)
-{
-#ifndef FEATURE_OAD_ONCHIP
-  uint8_t valueToCopy;
-
-  // Call to retrieve the value of the third characteristic in the profile
-  if (SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &valueToCopy) == SUCCESS)
-  {
-    // Call to set that value of the fourth characteristic in the profile.
-    // Note that if notifications of the fourth characteristic have been
-    // enabled by a GATT client device, then a notification will be sent
-    // every time this function is called.
-    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
-                               &valueToCopy);
-  }
-#endif //!FEATURE_OAD_ONCHIP
-}
+//static void SimpleBLEPeripheral_performPeriodicTask(void)
+//{
+//#ifndef FEATURE_OAD_ONCHIP
+//  uint8_t valueToCopy;
+//
+//  // Call to retrieve the value of the third characteristic in the profile
+//  if (SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &valueToCopy) == SUCCESS)
+//  {
+//    // Call to set that value of the fourth characteristic in the profile.
+//    // Note that if notifications of the fourth characteristic have been
+//    // enabled by a GATT client device, then a notification will be sent
+//    // every time this function is called.
+//    SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR4, sizeof(uint8_t),
+//                               &valueToCopy);
+//  }
+//#endif //!FEATURE_OAD_ONCHIP
+//}
 
 
 #ifdef FEATURE_OAD
@@ -1427,11 +1427,11 @@ void SimpleBLEPeripheral_processOadWriteCB(uint8_t event, uint16_t connHandle,
  *
  * @return  None.
  */
-static void SimpleBLEPeripheral_clockHandler(UArg arg)
-{
-  // Wake up the application.
-  Event_post(syncEvent, arg);
-}
+//static void SimpleBLEPeripheral_clockHandler(UArg arg)
+//{
+//  // Wake up the application.
+//  Event_post(syncEvent, arg);
+//}
 
 #if !defined(Display_DISABLE_ALL)
 /*********************************************************************
