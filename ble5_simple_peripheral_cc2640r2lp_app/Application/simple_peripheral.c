@@ -252,27 +252,17 @@ Char sbpTaskStack[SBP_TASK_STACK_SIZE];
 static uint8_t scanRspData[] =
 {
   // complete name
-  0x14,   // length of this data
+  0x09,   // length of this data
   GAP_ADTYPE_LOCAL_NAME_COMPLETE,
-  'S',
-  'i',
+  'G',
+  'e',
   'm',
-  'p',
-  'l',
-  'e',
-  'B',
-  'L',
-  'E',
-  'P',
-  'e',
-  'r',
-  'i',
-  'p',
   'h',
-  'e',
-  'r',
-  'a',
-  'l',
+  'o',
+  'E',
+  'C',
+  'G',
+
 
   // connection interval range
   0x05,   // length of this data
@@ -318,7 +308,7 @@ static uint8_t advertData[] =
 };
 
 // GAP GATT Attributes
-static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "Simple Peripheral";
+static uint8_t attDeviceName[GAP_DEVICE_NAME_LEN] = "GemhoECG";
 
 // Globals used for ATT Response retransmission
 static gattMsgEvent_t *pAttRsp = NULL;

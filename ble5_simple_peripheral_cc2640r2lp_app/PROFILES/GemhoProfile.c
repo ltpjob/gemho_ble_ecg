@@ -230,6 +230,7 @@ void handleDataValueFunc(unsigned char extendedCodeLevel,
 //            rawWave = (value[0]<<8) | value[1];
             buffer[count*2] = value[0];
             buffer[count*2+1] = value[1];
+            count++;
 
             if(count >= 9)
             {
@@ -239,10 +240,6 @@ void handleDataValueFunc(unsigned char extendedCodeLevel,
                 GemhoProfile_Notification( GemhoProfile_Gemho_serviceConfig, (uint8_t *)&GemhoProfile_Gemho_serviceVal, FALSE,
                                             GemhoProfileAttrTbl, GATT_NUM_ATTRS( GemhoProfileAttrTbl ),
                                             (uint8 *)buffer, sizeof(buffer));
-            }
-            else
-            {
-                count++;
             }
 
 
